@@ -853,7 +853,8 @@ Value Eval::evaluate(const Position& pos) {
   // Attenuate score as a function of rule50_count() when an opposite 
   // colored bishop positions arise.
   if (   pos.opposite_bishops()
-      && pos.non_pawn_material(WHITE) == BishopValueMg			              && pos.non_pawn_material(BLACK) == BishopValueMg
+      && pos.non_pawn_material(WHITE) == BishopValueMg
+      && pos.non_pawn_material(BLACK) == BishopValueMg
       && pos.rule50_count() > 4)
   {
 	float shuffle = pos.rule50_count();
