@@ -855,11 +855,11 @@ Value Eval::evaluate(const Position& pos) {
   if (   pos.opposite_bishops()
       && pos.non_pawn_material(WHITE) == BishopValueMg
       && pos.non_pawn_material(BLACK) == BishopValueMg
-      && pos.rule50_count() > 4)
+      && pos.rule50_count() > 2)
   {
 	float shuffle = pos.rule50_count();
-	score *= -(shuffle / 100)*(shuffle / 100)
-		 *(shuffle / 100)*(shuffle / 100) + 1;
+	score *= -(shuffle / 110)*(shuffle / 110)
+		 *(shuffle / 110)*(shuffle / 110) + 1;
   }
   
   // Evaluate scale factor for the winning side
