@@ -855,8 +855,8 @@ Value Eval::evaluate(const Position& pos) {
   if (   pos.opposite_bishops()
       && pos.non_pawn_material(WHITE) == BishopValueMg
       && pos.non_pawn_material(BLACK) == BishopValueMg
-      && pos.rule50_count() > 20)
-      score *= -pos.rule50_count() / 80.0 + 1.25;
+      && pos.rule50_count() > 15)
+      score *= -(1/85)*(100-pos.rule50_count());
   
   // Evaluate scale factor for the winning side
   ScaleFactor sf = evaluate_scale_factor(pos, ei, eg_value(score));
