@@ -216,6 +216,9 @@ namespace {
   const int BishopCheck       = 538;
   const int KnightCheck       = 874;
 
+  // Initialize tuning of the ply variable.
+  int ply = 9;
+  TUNE(ply);
 
   // eval_init() initializes king and attack bitboards for a given color
   // adding pawn attacks. To be done at the beginning of the evaluation.
@@ -853,6 +856,15 @@ Value Eval::evaluate(const Position& pos) {
   // Evaluate scale factor for the winning side
   ScaleFactor sf = evaluate_scale_factor(pos, ei, eg_value(score));
 
+
+  // Attenuate score with increasing rule50_count() starting at
+  // ply.
+  if (   pos.opposite_bishops()
+      && pos.non_pawn_material(WHITE) == BishopValueMg
+      && pos.non_pawn_material(BLACK) == BishopValueMg
+      && pos.rule50_count() > ply)
+    score *= (1/(100-ply))*(100-pos.rule50_count());
+  
   // Interpolate between a middlegame and a (scaled by 'sf') endgame score
   Value v =  mg_value(score) * int(ei.me->game_phase())
            + eg_value(score) * int(PHASE_MIDGAME - ei.me->game_phase()) * sf / SCALE_FACTOR_NORMAL;
@@ -873,6 +885,8 @@ Value Eval::evaluate(const Position& pos) {
 
   return (pos.side_to_move() == WHITE ? v : -v) + Eval::Tempo; // Side to move point of view
 }
+
+
 
 // Explicit template instantiations
 template Value Eval::evaluate<true >(const Position&);
