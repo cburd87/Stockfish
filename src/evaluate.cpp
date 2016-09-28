@@ -748,7 +748,10 @@ namespace {
 	    // endgame.cpp.
             if (   pos.non_pawn_material(WHITE) == BishopValueMg
                 && pos.non_pawn_material(BLACK) == BishopValueMg)
-                sf = ScaleFactor(31);
+	    {
+		double factor = std::max(1.0 - pos.rule50_count() / 10.0, 9.0/31.0);
+                sf = ScaleFactor(31*factor);
+            }
 
             // Endgame with opposite-colored bishops, but also other pieces. Still
             // a bit drawish, but not as drawish as with only the two bishops.
