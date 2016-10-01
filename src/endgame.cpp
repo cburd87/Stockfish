@@ -125,7 +125,6 @@ Endgames::Endgames() {
   add<KRPKB>("KRPKB");
   add<KBPKB>("KBPKB");
   add<KBPKN>("KBPKN");
-  add<KBPPKB>("KBPPKB");
   add<KRPPKRP>("KRPPKRP");
 }
 
@@ -658,101 +657,9 @@ ScaleFactor Endgame<KBPKB>::operator()(const Position& pos) const {
 
   // Case 2: Opposite colored bishops
   if (opposite_colors(strongBishopSq, weakBishopSq))
-  {
-      // We assume that the position is drawn in the following three situations:
-      //
-      //   a. The pawn is on rank 5 or further back.
-      //   b. The defending king is somewhere in the pawn's path.
-      //   c. The defending bishop attacks some square along the pawn's path,
-      //      and is at least three squares away from the pawn.
-      //
-      // These rules are probably not perfect, but in practice they work
-      // reasonably well.
+      return ScaleFactor(9);
 
-      if (relative_rank(strongSide, pawnSq) <= RANK_5)
-          return SCALE_FACTOR_DRAW;
-      else
-      {
-          Bitboard path = forward_bb(strongSide, pawnSq);
-
-          if (path & pos.pieces(weakSide, KING))
-              return SCALE_FACTOR_DRAW;
-
-          if (  (pos.attacks_from<BISHOP>(weakBishopSq) & path)
-              && distance(weakBishopSq, pawnSq) >= 3)
-              return SCALE_FACTOR_DRAW;
-      }
-  }
   return SCALE_FACTOR_NONE;
-}
-
-
-/// KBPP vs KB. It detects a few basic draws with opposite-colored bishops
-template<>
-ScaleFactor Endgame<KBPPKB>::operator()(const Position& pos) const {
-
-  assert(verify_material(pos, strongSide, BishopValueMg, 2));
-  assert(verify_material(pos, weakSide,   BishopValueMg, 0));
-
-  Square wbsq = pos.square<BISHOP>(strongSide);
-  Square bbsq = pos.square<BISHOP>(weakSide);
-
-  if (!opposite_colors(wbsq, bbsq))
-      return SCALE_FACTOR_NONE;
-
-  Square ksq = pos.square<KING>(weakSide);
-  Square psq1 = pos.squares<PAWN>(strongSide)[0];
-  Square psq2 = pos.squares<PAWN>(strongSide)[1];
-  Rank r1 = rank_of(psq1);
-  Rank r2 = rank_of(psq2);
-  Square blockSq1, blockSq2;
-
-  if (relative_rank(strongSide, psq1) > relative_rank(strongSide, psq2))
-  {
-      blockSq1 = psq1 + pawn_push(strongSide);
-      blockSq2 = make_square(file_of(psq2), rank_of(psq1));
-  }
-  else
-  {
-      blockSq1 = psq2 + pawn_push(strongSide);
-      blockSq2 = make_square(file_of(psq1), rank_of(psq2));
-  }
-
-  switch (distance<File>(psq1, psq2))
-  {
-  case 0:
-    // Both pawns are on the same file. It's an easy draw if the defender firmly
-    // controls some square in the frontmost pawn's path.
-    if (   file_of(ksq) == file_of(blockSq1)
-        && relative_rank(strongSide, ksq) >= relative_rank(strongSide, blockSq1)
-        && opposite_colors(ksq, wbsq))
-        return SCALE_FACTOR_DRAW;
-    else
-        return SCALE_FACTOR_NONE;
-
-  case 1:
-    // Pawns on adjacent files. It's a draw if the defender firmly controls the
-    // square in front of the frontmost pawn's path, and the square diagonally
-    // behind this square on the file of the other pawn.
-    if (   ksq == blockSq1
-        && opposite_colors(ksq, wbsq)
-        && (   bbsq == blockSq2
-            || (pos.attacks_from<BISHOP>(blockSq2) & pos.pieces(weakSide, BISHOP))
-            || distance(r1, r2) >= 2))
-        return SCALE_FACTOR_DRAW;
-
-    else if (   ksq == blockSq2
-             && opposite_colors(ksq, wbsq)
-             && (   bbsq == blockSq1
-                 || (pos.attacks_from<BISHOP>(blockSq1) & pos.pieces(weakSide, BISHOP))))
-        return SCALE_FACTOR_DRAW;
-    else
-        return SCALE_FACTOR_NONE;
-
-  default:
-    // The pawns are not on the same file or adjacent files. No scaling.
-    return SCALE_FACTOR_NONE;
-  }
 }
 
 
