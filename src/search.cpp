@@ -743,7 +743,7 @@ namespace {
         &&  eval - futility_margin(depth) >= beta
         &&  eval < VALUE_KNOWN_WIN  // Do not return unproven wins
         &&  pos.non_pawn_material(pos.side_to_move()))
-        return eval - futility_margin(depth);
+        return eval;
 
     // Step 8. Null move search with verification search (is omitted in PV nodes)
     if (   !PvNode
@@ -889,7 +889,7 @@ moves_loop: // When in check search starts from here
       // Step 12. Extend checks
       if (    givesCheck
           && !moveCountPruning
-          &&  pos.see_sign(move) >= VALUE_ZERO)
+          &&  pos.see_ge(move, VALUE_ZERO))
           extension = ONE_PLY;
 
       // Singular extension search. If all moves but one fail low on a search of
@@ -946,11 +946,11 @@ moves_loop: // When in check search starts from here
 
               // Prune moves with negative SEE
               if (   lmrDepth < 8
-                  && pos.see_sign(move) < Value(-35 * lmrDepth * lmrDepth))
+                  && !pos.see_ge(move, Value(-35 * lmrDepth * lmrDepth)))
                   continue;
           }
           else if (   depth < 7 * ONE_PLY
-                   && pos.see_sign(move) < Value(-35 * depth / ONE_PLY * depth / ONE_PLY))
+                   && !pos.see_ge(move, Value(-35 * depth / ONE_PLY * depth / ONE_PLY)))
                   continue;
       }
 
@@ -992,7 +992,7 @@ moves_loop: // When in check search starts from here
               // because the destination square is empty.
               else if (   type_of(move) == NORMAL
                        && type_of(pos.piece_on(to_sq(move))) != PAWN
-                       && pos.see(make_move(to_sq(move), from_sq(move))) < VALUE_ZERO)
+                       && !pos.see_ge(make_move(to_sq(move), from_sq(move)),  VALUE_ZERO))
                   r -= 2 * ONE_PLY;
 
               // Decrease/increase reduction for moves with a good/bad history
@@ -1302,7 +1302,7 @@ moves_loop: // When in check search starts from here
               continue;
           }
 
-          if (futilityBase <= alpha && pos.see(move) <= VALUE_ZERO)
+          if (futilityBase <= alpha && !pos.see_ge(move, VALUE_ZERO + 1))
           {
               bestValue = std::max(bestValue, futilityBase);
               continue;
@@ -1317,7 +1317,7 @@ moves_loop: // When in check search starts from here
       // Don't search moves with negative SEE values
       if (  (!InCheck || evasionPrunable)
           &&  type_of(move) != PROMOTION
-          &&  pos.see_sign(move) < VALUE_ZERO)
+          &&  !pos.see_ge(move, VALUE_ZERO))
           continue;
 
       // Speculative prefetch as early as possible
